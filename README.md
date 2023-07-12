@@ -1,5 +1,5 @@
 # Titanic-Data-Analysis-Using-Logistic-Regression
-
+In this project I:
 - Loaded the Titanic dataset and performed basic sanity checks to ensure data integrity.
 - Checked for missing values in important variables like pclass, survived, sex, and age.
 - Identified the most important variables for survival analysis based on survivors' accounts, including pclass, sex, age, and survived.
