@@ -1,0 +1,104 @@
+---
+title: "Titanic Data Analysis"
+author: "Isha Doshi"
+date: "2022-11-27"
+output:
+  pdf_document: default
+  word_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+**Loaded data and performed sanity checks.**
+```{r}
+titanic <-read.delim("titanic.csv.bz2",sep = ",")
+
+dim(titanic)
+names(titanic)
+head(titanic)
+any(is.na(titanic))
+```
+
+**Checking for missing values**
+
+```{r}
+missings <- sum(is.na(titanic))
+cat("The total number of missing values are", missings,"\n")
+any(is.na(titanic$pclass))
+any(is.na(titanic$survived))
+any(is.na(titanic$sex))
+any(is.na(titanic$age))
+cat("There are", sum(is.na(titanic$age)),"missing values in age" )
+```
+
+
+**According to me, the variables pclass, sex, age and survived would be the most important ones to describe survival. Based on the story, women and children from higher class would have highest chance of survival, men from lower class having the least chance of survival.**
+
+**Creating a new variable child, that is 1 if the passenger was younger than 14 years old.**
+```{r}
+library(dplyr)
+titanic <- titanic %>% mutate(data=titanic, child = case_when(age < 14 ~ 1,
+  age >= 14 ~ 0))
+head(titanic)
+```
+
+**e need to convert pclass into categorical because it consists of discrete values and not continuous ones. It only consists of 0, 1, 2, and 3**
+
+```{r}
+titanic$pclass <- factor(titanic$pclass)
+```
+
+**Estimating  a multiple logistic regression model**
+
+survival vs pclass
+```{r}
+library(ggplot2)
+model_pclass <- glm(survived ~ factor(pclass), data=titanic, family=binomial())
+summary(model_pclass)
+ggplot(titanic,aes(factor(pclass),survived))+geom_jitter(col="purple",alpha=0.3)
+
+```
+
+survival vs sex
+```{r}
+model_sex <- glm(survived ~ factor(sex), data=titanic, family = binomial())
+summary(model_sex)
+ggplot(titanic,aes(factor(sex),survived))+geom_jitter(col="purple",alpha=0.3)
+
+```
+
+survival vs age
+```{r}
+model_age <- glm(survived ~ age, data=titanic, family = binomial())
+summary(model_age)
+ggplot(titanic,aes(age,survived))+geom_jitter(col="purple",alpha=0.3)
+```
+
+survival vs age, pclass, and sex
+```{r}
+model<-glm(survived~age+factor(sex)+factor(pclass), data=titanic, family=binomial())
+summary(model)
+```
+
+**Based on the AIC score, we can interpret that multiple logistic regression with all three variables is better than survival vs every variable. Women had a better chance of survival than men. People from 1st class had a higher chance of survival than people from 2nd and 3rd class. A lot of people from 3rd class didn't survive. Younger people (below the age of 35) had a better chance of survival.**
+
+**More young men (18-35) died than children and old men. Although they appear to be more likely to survive than older men.**
+
+```{r}
+titanic <- titanic %>% mutate(data=titanic, youngman = case_when(age > 18 & age < 35 ~ 1,
+  age <=18 ~ 0,
+  age >=35 ~ 0))
+head(titanic)
+
+model_youngMan <- glm(survived ~ factor(youngman), data=titanic, family=binomial())
+summary(model_youngMan)
+ggplot(titanic,aes(factor(youngman),survived))+geom_jitter(col="purple",alpha=0.3)
+
+```
+
+**The survivors' accounts is kind of accurate. Women definitely had a better chance of survival. More men from higher classes survived than the lower class. Not a lot of young children survived, a lot of people from the age of 18-35 could not survive either. There were also multiple entries with missing age, which could have affected our analysis.**
+
